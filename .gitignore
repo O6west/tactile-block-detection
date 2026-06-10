@@ -1,0 +1,44 @@
+# 모델 가중치 (용량 큼 - Google Drive 링크 사용)
+*.pt
+*.pth
+
+# 대용량 미디어
+*.mp4
+*.avi
+*.zip
+
+# 캡처 이미지 전체 (샘플만 유지)
+captures/
+
+# 학교 제출용 문서
+*.pptx
+*.hwpx
+*.docx
+PBL*
+양식_*
+발표대본*
+텐서*
+점자블록*
+
+# 실험용 구버전 노트북
+braille_train_yolov8.ipynb
+train_yolov8.ipynb
+
+# 중간 과정 리포트
+model_comparison_report.html
+model_comparison_report_ep50.html
+PROJECT.md
+
+# 테스트 이미지
+before_normal*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db

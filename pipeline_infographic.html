@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 탐지 파이프라인</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .icon-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    .step-number {
+      font-size: 11px;
+      font-weight: bold;
+      color: #b2bec3;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #2d3436;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .step-desc {
+      font-size: 12px;
+      color: #636e72;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .step-code {
+      background: #2d3436;
+      color: #00cec9;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: left;
+      width: 100%;
+      line-height: 1.6;
+      white-space: pre;
+    }
+
+    /* 화살표 */
+    .arrow {
+      flex: 0 0 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 60px;
+    }
+
+    .arrow-line {
+      width: 30px;
+      height: 2px;
+      background: linear-gradient(90deg, #74b9ff, #0984e3);
+      position: relative;
+    }
+
+    .arrow-line::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: -5px;
+      border: 6px solid transparent;
+      border-left: 8px solid #0984e3;
+    }
+
+    /* 분기 화살표 (5번 → 6, 7번) */
+    .branch {
+      flex: 0 0 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 60px;
+      gap: 4px;
+    }
+
+    .branch-yes {
+      font-size: 10px;
+      color: #00b894;
+      font-weight: bold;
+    }
+
+    .arrow-line-green {
+      width: 30px;
+      height: 2px;
+      background: linear-gradient(90deg, #55efc4, #00b894);
+      position: relative;
+    }
+
+    .arrow-line-green::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: -5px;
+      border: 6px solid transparent;
+      border-left: 8px solid #00b894;
+    }
+
+    /* 색상 테마 */
+    .s1 .icon-box { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+    .s2 .icon-box { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+    .s3 .icon-box { background: linear-gradient(135deg, #fd79a8, #e84393); }
+    .s4 .icon-box { background: linear-gradient(135deg, #ffeaa7, #fdcb6e); }
+    .s5 .icon-box { background: linear-gradient(135deg, #55efc4, #00b894); }
+    .s6 .icon-box { background: linear-gradient(135deg, #ff7675, #d63031); }
+    .s7 .icon-box { background: linear-gradient(135deg, #81ecec, #00cec9); }
+
+    .title-area {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .title-area h2 {
+      font-size: 22px;
+      color: #2d3436;
+      margin-bottom: 6px;
+    }
+
+    .title-area p {
+      font-size: 13px;
+      color: #b2bec3;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #f1f2f6;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      color: #636e72;
+      margin-top: 4px;
+    }
+
+    .badge.green { background: #d4edda; color: #155724; }
+    .badge.blue  { background: #cce5ff; color: #004085; }
+    .badge.red   { background: #ffe0e0; color: #d63031; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="title-area">
+    <h2>실시간 점자블록 파손 탐지 파이프라인</h2>
+    <p>스마트폰 카메라 → YOLOv8 탐지 → 자동 캡쳐 & 로그 저장</p>
+  </div>
+
+  <div class="pipeline">
+
+    <!-- STEP 1 -->
+    <div class="step s1">
+      <div class="step-number">STEP 1</div>
+      <div class="icon-box">📱</div>
+      <div class="step-title">스마트폰<br>카메라 연결</div>
+      <div class="step-desc">IP Webcam 앱으로<br>HTTP 스트리밍</div>
+      <div class="step-code">VIDEO_PATH =
+"http://IP:8080/video"</div>
+    </div>
+
+    <div class="arrow"><div class="arrow-line"></div></div>
+
+    <!-- STEP 2 -->
+    <div class="step s2">
+      <div class="step-number">STEP 2</div>
+      <div class="icon-box">🎞️</div>
+      <div class="step-title">프레임<br>추출</div>
+      <div class="step-desc">OpenCV가<br>매 프레임 읽기</div>
+      <div class="step-code">ret, frame =
+  cap.read()</div>
+    </div>
+
+    <div class="arrow"><div class="arrow-line"></div></div>
+
+    <!-- STEP 3 -->
+    <div class="step s3">
+      <div class="step-number">STEP 3</div>
+      <div class="icon-box">🤖</div>
+      <div class="step-title">YOLOv8<br>추론</div>
+      <div class="step-desc">신뢰도 0.5 이상<br>객체 탐지</div>
+      <div class="step-code">results = model(
+  frame, conf=0.5)</div>
+    </div>
+
+    <div class="arrow"><div class="arrow-line"></div></div>
+
+    <!-- STEP 4 -->
+    <div class="step s4">
+      <div class="step-number">STEP 4</div>
+      <div class="icon-box">🔍</div>
+      <div class="step-title">damaged<br>필터링</div>
+      <div class="step-desc">탐지 결과 중<br>파손 클래스만 추출</div>
+      <div class="step-code">damaged = [b for b
+  in results.boxes
+  if cls == DAMAGED]</div>
+    </div>
+
+    <div class="branch">
+      <div class="branch-yes">3초 경과?</div>
+      <div class="arrow-line-green"></div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step s5">
+      <div class="step-number">STEP 5</div>
+      <div class="icon-box">⏱️</div>
+      <div class="step-title">중복 방지<br>인터벌 체크</div>
+      <div class="step-desc">동일 장면 반복<br>저장 방지 (3초)</div>
+      <div class="step-code">if damaged and
+  elapsed >= 3s:</div>
+    </div>
+
+    <div class="arrow"><div class="arrow-line"></div></div>
+
+    <!-- STEP 6 -->
+    <div class="step s6">
+      <div class="step-number">STEP 6</div>
+      <div class="icon-box">📸</div>
+      <div class="step-title">자동 캡쳐<br>저장</div>
+      <div class="step-desc">바운딩박스 포함<br>JPG 저장</div>
+      <div class="step-code">cv2.imwrite(
+  filename,
+  annotated)</div>
+    </div>
+
+    <div class="arrow"><div class="arrow-line"></div></div>
+
+    <!-- STEP 7 -->
+    <div class="step s7">
+      <div class="step-number">STEP 7</div>
+      <div class="icon-box">📋</div>
+      <div class="step-title">CSV<br>로그 기록</div>
+      <div class="step-desc">시각·위치·신뢰도<br>자동 기록</div>
+      <div class="step-code">csv.writer.writerow(
+  [file, time,
+   location, conf])</div>
+    </div>
+
+  </div>
+
+  <!-- 하단 배지 -->
+  <div style="display:flex; justify-content:center; gap:12px; margin-top:32px; flex-wrap:wrap;">
+    <span class="badge blue">YOLOv8s · mAP50 0.848</span>
+    <span class="badge green">신뢰도 임계값 0.5</span>
+    <span class="badge green">3초 중복 방지</span>
+    <span class="badge">captures/ JPG 저장</span>
+    <span class="badge">detection_log.csv</span>
+  </div>
+
+</div>
+</body>
+</html>
